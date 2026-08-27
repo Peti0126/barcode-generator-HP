@@ -18,7 +18,7 @@
         th, td { border: 1px solid #dee2e6; padding: 8px 12px; text-align: left; vertical-align: middle; }
         th { background: #e9ecef; color: #495057; }
         tr:nth-child(even) { background-color: #fafafa; }
-        .barcode-svg { max-height: 42px; }
+        .barcode-svg { max-height: 52px; }
         
         /* Jogvédelmi és szerzői sáv */
         .footer-legal { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e5e5; font-size: 11px; color: #6c757d; line-height: 1.5; }
@@ -139,12 +139,15 @@ function megjelenit(chn, adatok) {
         `;
         tbody.appendChild(sor);
 
+        // Vonalkód generálás egyedi alsó felirattal (Megnevezés + Érték)
         JsBarcode(`#barcode_${index}`, item.akt, {
             format: "CODE128",
             width: 1.5,
             height: 35,
             displayValue: true,
-            fontSize: 12,
+            text: `${item.megn} | ${item.akt}`,
+            fontSize: 11,
+            textMargin: 4,
             margin: 2
         });
     });
