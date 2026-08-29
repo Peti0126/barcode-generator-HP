@@ -1,160 +1,289 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <title>Mérési Jegyzőkönyv Vonalkód Generátor</title>
-    <!-- JsBarcode könyvtár -->
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 25px; background: #f4f6f9; color: #333; margin: 0; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .box { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-        .upload-zone { border: 2px dashed #007bff; padding: 25px; text-align: center; border-radius: 6px; background: #f8faff; cursor: pointer; transition: 0.2s; }
-        .upload-zone:hover { background: #edf4ff; }
-        .upload-zone input { display: none; }
-        .btn-upload { background: #007bff; color: white; padding: 10px 22px; border-radius: 4px; display: inline-block; cursor: pointer; font-weight: 600; }
-        .btn-print { background: #28a745; color: white; padding: 8px 18px; border: none; border-radius: 4px; cursor: pointer; float: right; font-weight: bold; margin-bottom: 15px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #dee2e6; padding: 8px 12px; text-align: left; vertical-align: middle; }
-        th { background: #e9ecef; color: #495057; }
-        tr:nth-child(even) { background-color: #fafafa; }
-        .barcode-svg { max-height: 52px; }
-        
-        /* Jogvédelmi és szerzői sáv */
-        .footer-legal { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e5e5e5; font-size: 11px; color: #6c757d; line-height: 1.5; }
-        .footer-legal strong { color: #212529; }
-        .watermark { font-size: 11px; color: #888; margin-top: 8px; text-align: right; }
+  <meta charset="UTF-8">
+  <title>Mérési Jegyzőkönyv - Több Fészek Vonalkód Mátrix</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 15px;
+      background: #f4f6f9;
+      color: #333;
+    }
+    .header-box {
+      background: #fff;
+      padding: 18px 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-secondary { background: #6c757d; color: white; }
+    .btn.active { background: #28a745; }
+    
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #dee2e6;
+      padding: 8px 6px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      background: #e9ecef;
+      color: #333;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+    }
+    .megn-col {
+      background: #f8f9fa;
+      font-weight: bold;
+      font-size: 14px;
+      min-width: 130px;
+      text-align: left;
+      padding-left: 12px;
+      position: sticky;
+      left: 0;
+      z-index: 2;
+    }
+    .cell-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 110px;
+    }
+    .barcode-svg {
+      max-height: 40px;
+      width: 100%;
+    }
+    .compact-view .barcode-svg {
+      max-height: 32px;
+    }
+    .compact-view .meta-text {
+      display: none;
+    }
+    .meta-text {
+      font-size: 11px;
+      color: #555;
+      margin-top: 2px;
+    }
+    .footer-legal {
+      margin-top: 25px;
+      padding-top: 10px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 11px;
+      color: #6c757d;
+    }
 
-        @media print {
-            .no-print { display: none; }
-            body { background: #fff; padding: 0; }
-            .box { box-shadow: none; padding: 0; max-width: 100%; }
-            .footer-legal { display: block; border-top: 1px solid #ccc; font-size: 9px; margin-top: 20px; }
-        }
-    </style>
+    @media print {
+      .no-print { display: none; }
+      body { background: #fff; margin: 0; padding: 0; }
+      .table-container { box-shadow: none; padding: 0; }
+      th, td { border: 1px solid #000; padding: 4px 2px; }
+      .barcode-svg { max-height: 35px; }
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="box">
-        <div class="no-print">
-            <h2 style="margin-top: 0; color: #1e293b;">Mérési Jegyzőkönyv Beolvasó & Vonalkód Konverter</h2>
-            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                <span class="btn-upload">📁 TXT Jegyzőkönyv Tallózása</span>
-                <input type="file" id="fileInput" accept=".txt">
-                <p style="margin: 10px 0 0 0; color: #64748b; font-size: 13px;">Kattints ide a gép által mentett TXT jegyzőkönyv kiválasztásához</p>
-            </div>
-            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-        </div>
-
-        <div id="eredmeny" style="display: none;">
-            <button class="btn-print no-print" onclick="window.print()">🖨️ Mérési lap nyomtatása</button>
-            <h3 id="sarzsCim" style="margin: 0 0 10px 0; color: #0f172a;"></h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Megnevezés (MEGN)</th>
-                        <th>Névleges</th>
-                        <th>Mért érték (AKT +)</th>
-                        <th style="text-align: center;">Vonalkód (Code 128)</th>
-                    </tr>
-                </thead>
-                <tbody id="tablazatTorzs"></tbody>
-            </table>
-        </div>
-
-        <!-- Szerzői és Felhasználási Jog Nyilatkozat -->
-        <div class="footer-legal">
-            <div><strong>Fejlesztő & Szellemi Tulajdonos:</strong> Horváth Péter &copy; 2026. Minden jog fenntartva.</div>
-            <div><strong>Felhasználási feltétel:</strong> A szoftver és annak forráskódja a szerző kizárólagos szellemi tulajdonát képezi. A felület ipari vagy belső vállalati célú használata, módosítása, terjesztése vagy integrációja kizárólag a fejlesztő előzetes írásbeli hozzájárulásával és licencszerződés alapján megengedett.</div>
-            <div class="watermark">Rendszer: Measurement Barcode Adapter v1.0 | Fejlesztette: Horváth Péter</div>
-        </div>
+  <div class="header-box no-print">
+    <h2 style="margin: 0 0 8px 0; color: #1e293b;">Több Jegyzőkönyv Mátrix Vonalkód Generátor</h2>
+    <p style="margin: 0; color: #64748b; font-size: 13px;">Tallózz be egyszerre akár 16 jegyzőkönyvet (TXT). A rendszer a megnevezéseket (pl. 70, 80...) sorokba rendezi, a fészkeket pedig oszlopokba.</p>
+    
+    <div class="controls">
+      <input type="file" id="fileInput" multiple accept=".txt" style="border: 1px solid #ccc; padding: 6px; border-radius: 4px; background: #f8faff;" />
+      <button class="btn btn-primary active" id="btnNormal" onclick="switchView('normal')">Normál Nézet</button>
+      <button class="btn btn-secondary" id="btnCompact" onclick="switchView('compact')">Kompakt (Csak kódok)</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Nyomtatás</button>
     </div>
-</div>
+  </div>
 
-<script>
-/**
- * Measurement Barcode Converter Engine
- * Copyright (c) 2026 Horvath Peter. All rights reserved.
- * Unauthorized copying, modification or commercial distribution is strictly prohibited.
- */
+  <div id="outputArea" class="table-container" style="display: none;">
+    <table id="matrixTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
 
-document.getElementById('fileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  <div class="footer-legal no-print">
+    <strong>Fejlesztő & Szellemi Tulajdonos:</strong> Horváth Péter &copy; 2026. Minden jog fenntartva.
+  </div>
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        feldolgozTxt(e.target.result);
-    };
-    reader.readAsText(file, 'ISO-8859-2');
-});
+  <script>
+    let matrixData = {}; // { megn: { feszekNev: aktValue } }
+    let feszekNevek = [];
+    let megnLista = [];
+    let currentView = 'normal';
 
-function feldolgozTxt(tartalom) {
-    const sorok = tartalom.split('\n');
-    let tablazatKezdet = false;
-    let chn = "N/A";
-    const adatok = [];
+    document.getElementById('fileInput').addEventListener('change', async function(e) {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
 
-    for (let sor of sorok) {
-        if (sor.includes("CHN.:")) {
-            const match = sor.match(/CHN\.:\s*(\S+)/);
-            if (match) chn = match[1];
-        }
+      // Fájlok sorrendbe állítása fészkenként (1, 2, ... 16)
+      files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
+      matrixData = {};
+      feszekNevek = [];
+      const megnHalmaz = new Set();
+
+      for (const file of files) {
+        const text = await file.text();
+        const feszekAzonosito = file.name.replace(/\.[^/.]+$/, ""); // pl. Feszek_1
+        feszekNevek.push(feszekAzonosito);
+
+        const tetelek = parseTxt(text);
+        tetelek.forEach(t => {
+          megnHalmaz.add(t.megn);
+          if (!matrixData[t.megn]) {
+            matrixData[t.megn] = {};
+          }
+          matrixData[t.megn][feszekAzonosito] = t.akt;
+        });
+      }
+
+      // Megnevezések numerikus sorba rendezése (pl. 70, 80, 90...)
+      megnLista = Array.from(megnHalmaz).sort((a, b) => {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
+      renderMatrix();
+    });
+
+    function parseTxt(tartalom) {
+      const sorok = tartalom.split('\n');
+      let tablazatKezdet = false;
+      const talaltTetelek = [];
+
+      for (let sor of sorok) {
         if (sor.includes("------")) {
-            tablazatKezdet = true;
-            continue;
+          tablazatKezdet = true;
+          continue;
         }
 
         if (tablazatKezdet && sor.trim()) {
-            const reszek = sor.trim().split(/\s+/);
-            if (reszek.length >= 6 && ["X", "Y", "Z", "LT", "D", "R"].includes(reszek[0])) {
-                let akt = reszek[1].replace("-", ""); // Csak pozitív abszolút érték
-                let nevleges = reszek[2].replace("-", "");
-                let megn = reszek[reszek.length - 1];
-
-                adatok.push({ megn: megn, nevleges: nevleges, akt: akt });
-            }
+          const reszek = sor.trim().split(/\s+/);
+          if (reszek.length >= 6 && ["X", "Y", "Z", "LT", "D", "R"].includes(reszek[0])) {
+            let akt = reszek[1].replace("-", ""); // Csak pozitív érték
+            let megn = reszek[reszek.length - 1];
+            talaltTetelek.push({ megn: megn, akt: akt });
+          }
         }
+      }
+      return talaltTetelek;
     }
 
-    megjelenit(chn, adatok);
-}
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('btnNormal').className = `btn ${view === 'normal' ? 'btn-primary active' : 'btn-secondary'}`;
+      document.getElementById('btnCompact').className = `btn ${view === 'compact' ? 'btn-primary active' : 'btn-secondary'}`;
+      
+      const out = document.getElementById('outputArea');
+      if (view === 'compact') {
+        out.classList.add('compact-view');
+      } else {
+        out.classList.remove('compact-view');
+      }
+    }
 
-function megjelenit(chn, adatok) {
-    document.getElementById('sarzsCim').innerText = "Sarzs / CHN: " + chn;
-    const tbody = document.getElementById('tablazatTorzs');
-    tbody.innerHTML = "";
+    function renderMatrix() {
+      const thead = document.getElementById('tableHead');
+      const tbody = document.getElementById('tableBody');
 
-    adatok.forEach((item, index) => {
-        const sor = document.createElement('tr');
-        sor.innerHTML = `
-            <td><b>${item.megn}</b></td>
-            <td>${item.nevleges}</td>
-            <td><b>${item.akt}</b></td>
-            <td style="text-align: center;">
-                <svg id="barcode_${index}" class="barcode-svg"></svg>
-            </td>
-        `;
-        tbody.appendChild(sor);
+      // Fejléc felépítése: Megnevezés + Fészkek egymás mellett
+      let headHtml = `<tr><th class="megn-col">Megnevezés</th>`;
+      feszekNevek.forEach(fNev => {
+        headHtml += `<th>${fNev}</th>`;
+      });
+      headHtml += `</tr>`;
+      thead.innerHTML = headHtml;
 
-        // Vonalkód generálás egyedi alsó felirattal (Megnevezés + Érték)
-        JsBarcode(`#barcode_${index}`, item.akt, {
-            format: "CODE128",
-            width: 1.5,
-            height: 35,
-            displayValue: true,
-            text: `${item.megn} | ${item.akt}`,
-            fontSize: 11,
-            textMargin: 4,
-            margin: 2
+      // Sorok felépítése: Minden megnevezés egy sor
+      tbody.innerHTML = "";
+      let svgIndex = 0;
+
+      megnLista.forEach(megn => {
+        const tr = document.createElement('tr');
+        
+        let rowHtml = `<td class="megn-col">${megn}</td>`;
+
+        feszekNevek.forEach(fNev => {
+          const ertek = matrixData[megn]?.[fNev] || "-";
+          const svgId = `bc_${svgIndex}`;
+
+          if (ertek !== "-") {
+            rowHtml += `
+              <td>
+                <div class="cell-card">
+                  <svg id="${svgId}" class="barcode-svg"></svg>
+                  <div class="meta-text">${megn} | <b>${ertek}</b></div>
+                </div>
+              </td>
+            `;
+          } else {
+            rowHtml += `<td>-</td>`;
+          }
+          svgIndex++;
         });
-    });
 
-    document.getElementById('eredmeny').style.display = 'block';
-}
-</script>
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+      });
 
+      // Vonalkódok generálása az összes cellához
+      svgIndex = 0;
+      megnLista.forEach(megn => {
+        feszekNevek.forEach(fNev => {
+          const ertek = matrixData[megn]?.[fNev];
+          if (ertek && ertek !== "-") {
+            try {
+              JsBarcode(`#bc_${svgIndex}`, ertek, {
+                format: "CODE128",
+                width: 1.1,
+                height: 30,
+                displayValue: true,
+                fontSize: 10,
+                textMargin: 2,
+                margin: 2
+              });
+            } catch (err) {
+              console.error(err);
+            }
+          }
+          svgIndex++;
+        });
+      });
+
+      document.getElementById('outputArea').style.display = 'block';
+    }
+  </script>
 </body>
 </html>
