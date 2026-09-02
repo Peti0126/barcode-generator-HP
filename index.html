@@ -48,11 +48,11 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      font-size: 12px;
     }
     th, td {
       border: 1px solid #dee2e6;
-      padding: 8px 6px;
+      padding: 6px 4px;
       text-align: center;
       vertical-align: middle;
     }
@@ -63,14 +63,15 @@
       position: sticky;
       top: 0;
       z-index: 1;
+      font-size: 11px;
+      word-break: break-all;
     }
     .megn-col {
       background: #f8f9fa;
       font-weight: bold;
-      font-size: 14px;
-      min-width: 130px;
-      text-align: left;
-      padding-left: 12px;
+      font-size: 13px;
+      min-width: 60px;
+      text-align: center;
       position: sticky;
       left: 0;
       z-index: 2;
@@ -83,22 +84,25 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-width: 110px;
-    }
-    .barcode-svg {
-      max-height: 40px;
       width: 100%;
     }
+    .barcode-svg {
+      max-height: 38px;
+      width: 100%;
+      max-width: 90px;
+      height: auto;
+    }
     .compact-view .barcode-svg {
-      max-height: 32px;
+      max-height: 28px;
     }
     .compact-view .meta-text {
       display: none;
     }
     .meta-text {
-      font-size: 11px;
-      color: #555;
-      margin-top: 2px;
+      font-size: 10px;
+      color: #333;
+      margin-top: 1px;
+      white-space: nowrap;
     }
     .footer-legal {
       margin-top: 25px;
@@ -108,64 +112,78 @@
       color: #6c757d;
     }
 
-    /* --- NYOMTATÁSI OPTIMALIZÁLÁS --- */
+    /* --- NYOMTATÁSI BEÁLLÍTÁSOK (16 FÉSZEKRE OPTIMALIZÁLVA) --- */
     @page {
       size: A4 landscape;
-      margin: 8mm;
+      margin: 4mm; /* Minimális margó a maximális helyért */
     }
 
     @media print {
-      .no-print { 
-        display: none !important; 
-      }
-      body { 
-        background: #fff; 
-        margin: 0; 
-        padding: 0; 
+      html, body {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      .no-print { 
+        display: none !important; 
+      }
       .table-container { 
-        box-shadow: none; 
-        padding: 0; 
-        overflow: visible; 
+        box-shadow: none !important; 
+        padding: 0 !important; 
+        margin: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
       }
       table {
-        page-break-after: auto;
-        font-size: 10px;
+        width: 100% !important;
+        table-layout: fixed !important; /* Kényszeríti a lapon belüli egyenletes eloszlást */
+        font-size: 8px !important;
       }
       thead {
-        display: table-header-group; /* Ismétlődik minden oldalon */
+        display: table-header-group;
       }
       tr {
         page-break-inside: avoid;
         break-inside: avoid;
       }
       th, td { 
-        border: 1px solid #444 !important; 
-        padding: 3px 2px !important; 
+        border: 1px solid #000 !important; 
+        padding: 2px 1px !important; 
+        overflow: hidden;
       }
       th {
-        background: #f0f0f0 !important;
-        position: static !important; /* Nem ragad be nyomtatáskor */
+        background: #eee !important;
+        position: static !important;
+        font-size: 8px !important;
+        line-height: 1 !important;
       }
       .megn-col {
         position: static !important;
-        background: #f9f9f9 !important;
-        font-size: 11px;
-        min-width: 70px;
-        padding-left: 4px;
+        background: #f0f0f0 !important;
+        font-size: 9px !important;
+        min-width: 35px !important;
+        width: 40px !important;
+        padding: 1px !important;
       }
       .cell-card {
-        min-width: auto;
+        width: 100% !important;
+        min-width: 0 !important;
       }
       .barcode-svg { 
-        max-height: 26px !important; 
+        max-height: 24px !important; 
         width: 100% !important;
+        max-width: 100% !important;
       }
       .meta-text {
-        font-size: 9px;
-        margin-top: 1px;
+        font-size: 7.5px !important;
+        margin-top: 0px !important;
+        transform: scale(0.95);
+      }
+      .footer-legal {
+        display: none !important;
       }
     }
   </style>
@@ -173,8 +191,8 @@
 <body>
 
   <div class="header-box no-print">
-    <h2 style="margin: 0 0 8px 0; color: #1e293b;">Több Jegyzőkönyv Mátrix Vonalkód Generátor</h2>
-    <p style="margin: 0; color: #64748b; font-size: 13px;">Tallózz be egyszerre akár 16 jegyzőkönyvet (TXT). A rendszer a megnevezéseket sorokba rendezi, a fészkeket pedig oszlopokba. 😉</p>
+    <h2 style="margin: 0 0 8px 0; color: #1e293b;">Több Fészek Mátrix Vonalkód Generátor</h2>
+    <p style="margin: 0; color: #64748b; font-size: 13px;">Tallózz be egyszerre akár 16 jegyzőkönyvet (TXT). A rendszer automatikusan méretezi a táblázatot fekvő A4-es lapra nyomtatáskor. 😉</p>
     
     <div class="controls">
       <input type="file" id="fileInput" multiple accept=".txt" style="border: 1px solid #ccc; padding: 6px; border-radius: 4px; background: #f8faff;" />
@@ -273,14 +291,18 @@
       const thead = document.getElementById('tableHead');
       const tbody = document.getElementById('tableBody');
 
-      let headHtml = `<tr><th class="megn-col">Megnevezés</th>`;
-      feszekNevek.forEach(fNev => {
-        headHtml += `<th>${fNev}</th>`;
+      // Fejléc: Nyomtatáskor rövidített név (pl. sorszám), képernyőn a teljes név
+      let headHtml = `<tr><th class="megn-col">Megn.</th>`;
+      feszekNevek.forEach((fNev, i) => {
+        headHtml += `<th title="${fNev}">F${i + 1}</th>`;
       });
       headHtml += `</tr>`;
       thead.innerHTML = headHtml;
 
       tbody.innerHTML = "";
+
+      // Ha sok fészek van (pl. 8 felett), a vonalkód moduljait vékonyabbra vesszük (0.8 - 0.9)
+      const dynamicWidth = feszekNevek.length > 8 ? 0.85 : 1.1;
 
       megnLista.forEach(megn => {
         const tr = document.createElement('tr');
@@ -312,15 +334,13 @@
             try {
               JsBarcode(svg, ertek, {
                 format: "CODE128",
-                width: 1.1,
-                height: 30,
-                displayValue: true,
-                fontSize: 10,
-                textMargin: 2,
-                margin: 2
+                width: dynamicWidth,
+                height: 25,
+                displayValue: false, // Nem kell a belső felirat, mert a meta-text tartalmazza
+                margin: 0
               });
             } catch (err) {
-              console.error(`Vonalkód hiba (${megn} / ${fNev}):`, err);
+              console.error(`Hiba:`, err);
             }
           } else {
             td.textContent = "-";
